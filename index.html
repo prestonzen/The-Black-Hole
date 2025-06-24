@@ -52,10 +52,14 @@
         }
         .particle {
             position: absolute;
-            background: rgba(255, 255, 255, 0.6);
+            background: linear-gradient(45deg, #6e45e2, #9d4edd);
             border-radius: 50%;
-            filter: blur(1px);
+            filter: blur(1.5px);
             pointer-events: none;
+            opacity: 0.8;
+            transform-origin: center;
+            will-change: transform, opacity;
+            z-index: 5;
         }
         @media (max-width: 640px) {
             .black-hole {
@@ -73,7 +77,14 @@
         }
     </style>
 </head>
-<body class="bg-black min-h-screen flex flex-col items-center justify-start p-6 overflow-x-hidden">
+<body class="bg-black min-h-screen flex flex-col items-center justify-center p-6 overflow-hidden relative" style="height: 100vh;">
+    <!-- Background Video -->
+    <div class="fixed inset-0 w-full h-full z-0">
+        <iframe width="100%" height="100%" src="https://www.youtube.com/embed/gCWaRhNUvfc?autoplay=1&mute=0&controls=0&showinfo=0&autohide=1&loop=1&playlist=gCWaRhNUvfc" 
+                title="Background Space" frameborder="0" 
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                allowfullscreen class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 min-w-full min-h-full opacity-30"></iframe>
+    </div>
     <div class="w-full max-w-3xl mx-auto text-center pt-8 md:pt-16">
         <h1 class="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-transparent bg-clip-text">
             The Black Hole
@@ -117,83 +128,98 @@
         
     </div>
     
-    <!-- Easter egg comment -->
+    <!-- The Path of the Void  -->
     <!-- Oh you like to explore? Go find a secret pharse within one of the pages on https://1337sheets.com to find the clues leading to the truth of where this blackhole leads... -->
     
     <script>
-        // Create particles
+        // Create particles with more organic movement
         function createParticles() {
             const container = document.getElementById('particles');
             if (!container) return;
             
-            for (let i = 0; i < 25; i++) { // Fewer but more visible particles
+            const particles = [];
+            const particleCount = 40; // Increased number of particles
+            
+            for (let i = 0; i < particleCount; i++) { 
                 const particle = document.createElement('div');
+                particle.className = 'particle';
                 
-                // Random size between 4-10px
-                const size = Math.random() * 6 + 4;
+                // Random size between 3-8px
+                const size = Math.random() * 5 + 3;
                 particle.style.width = `${size}px`;
                 particle.style.height = `${size}px`;
                 
-                // Position in a tighter circle around the black hole
+                // Position in a circle around the black hole
                 const angle = Math.random() * Math.PI * 2;
-                const distance = Math.random() * 80 + 40; // Closer to the black hole
+                const distance = Math.random() * 100 + 30;
+                
+                // Random movement parameters
+                const amplitude = Math.random() * 15 + 5;
+                const speed = Math.random() * 0.015 + 0.005;
+                const offset = Math.random() * Math.PI * 2;
+                
+                // Store animation parameters
+                particle._angle = angle;
+                particle._distance = distance;
+                particle._amplitude = amplitude;
+                particle._speed = speed;
+                particle._offset = offset;
+                particle._time = Math.random() * 100;
+                
+                // Initial position
                 const x = 50 + Math.cos(angle) * distance;
                 const y = 50 + Math.sin(angle) * distance;
                 
                 particle.style.left = `${x}%`;
                 particle.style.top = `${y}%`;
-                
-                // Random animation
-                const duration = Math.random() * 15 + 10; // More varied speeds
-                const delay = Math.random() * -20; // Start at random points
-                const direction = Math.random() > 0.5 ? 'normal' : 'reverse';
-                
-                // Random color
-                const colors = ['#9d4edd', '#ff2d75', '#00f7ff', '#ff9e00'];
-                const color = colors[Math.floor(Math.random() * colors.length)];
-                
-                particle.style.background = color;
-                particle.style.boxShadow = `0 0 ${size * 2}px ${color}`;
-                particle.style.animation = `orbit ${duration}s linear ${delay}s ${direction} infinite`;
-                particle.style.opacity = '0.8';
-                particle.style.filter = 'blur(0.5px)';
-                
-                // Add pulsing effect
-                if (Math.random() > 0.5) {
-                    particle.style.animation += `, pulse ${Math.random() * 3 + 2}s ease-in-out infinite`;
-                }
+                particle.style.opacity = (Math.random() * 0.5 + 0.3).toString();
                 
                 container.appendChild(particle);
+                particles.push(particle);
             }
             
-            // Add some fast-moving small particles
-            for (let i = 0; i < 20; i++) {
-                const particle = document.createElement('div');
-                const size = Math.random() * 2 + 1;
-                particle.style.width = `${size}px`;
-                particle.style.height = `${size}px`;
-                particle.style.background = 'white';
+            // Animation loop for particles
+            function animateParticles() {
+                if (!container.isConnected) return; // Stop if container is removed
                 
-                const angle = Math.random() * Math.PI * 2;
-                const distance = Math.random() * 150 + 30;
-                const x = 50 + Math.cos(angle) * distance;
-                const y = 50 + Math.sin(angle) * distance;
+                particles.forEach(particle => {
+                    particle._time += particle._speed;
+                    
+                    // Circular motion with some noise for organic movement
+                    const noiseX = Math.sin(particle._time * 0.5 + particle._offset) * particle._amplitude;
+                    const noiseY = Math.cos(particle._time * 0.7 + particle._offset) * particle._amplitude;
+                    
+                    particle._angle += 0.0015;
+                    const x = 50 + Math.cos(particle._angle) * (particle._distance + noiseX);
+                    const y = 50 + Math.sin(particle._angle) * (particle._distance + noiseY);
+                    
+                    particle.style.left = `${x}%`;
+                    particle.style.top = `${y}%`;
+                    
+                    // Subtle pulsing effect
+                    particle.style.opacity = (0.4 + Math.sin(particle._time) * 0.15).toString();
+                });
                 
-                particle.style.left = `${x}%`;
-                particle.style.top = `${y}%`;
-                
-                const duration = Math.random() * 5 + 3; // Faster particles
-                const delay = Math.random() * -10;
-                
-                particle.style.animation = `orbit ${duration}s linear ${delay}s infinite`;
-                particle.style.opacity = '0.7';
-                
-                container.appendChild(particle);
+                requestAnimationFrame(animateParticles);
             }
+            
+            // Start animation
+            animateParticles();
+            
+            return particles;
         }
         
         // Initialize on load
         window.addEventListener('load', createParticles);
+        
+        // Prevent scrolling
+        document.addEventListener('wheel', (e) => {
+            e.preventDefault();
+        });
+        
+        // Enable audio
+        const iframe = document.querySelector('iframe');
+        iframe.src = iframe.src.replace('mute=1', 'mute=0');
     </script>
 </body>
 </html>

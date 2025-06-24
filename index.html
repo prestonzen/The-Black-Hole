@@ -78,12 +78,14 @@
     </style>
 </head>
 <body class="bg-black min-h-screen flex flex-col items-center justify-center p-6 overflow-hidden relative" style="height: 100vh;">
-    <!-- Background Video -->
-    <div class="fixed inset-0 w-full h-full z-0">
-        <iframe width="100%" height="100%" src="https://www.youtube.com/embed/gCWaRhNUvfc?autoplay=1&mute=0&controls=0&showinfo=0&autohide=1&loop=1&playlist=gCWaRhNUvfc" 
-                title="Background Space" frameborder="0" 
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                allowfullscreen class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 min-w-full min-h-full opacity-30"></iframe>
+    <!-- Hidden Audio -->
+    <div style="position: fixed; width: 1px; height: 1px; opacity: 0.01; pointer-events: none; overflow: hidden;">
+        <iframe width="1" height="1" 
+                src="https://www.youtube.com/embed/gCWaRhNUvfc?autoplay=1&controls=0&showinfo=0&modestbranding=1&loop=1&fs=0&cc_load_policy=0&iv_load_policy=3&autohide=0&playlist=gCWaRhNUvfc&enablejsapi=1"
+                title="Background Audio" 
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope" 
+                frameborder="0" 
+                allowfullscreen></iframe>
     </div>
     <div class="w-full max-w-3xl mx-auto text-center pt-8 md:pt-16">
         <h1 class="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-transparent bg-clip-text">
@@ -217,9 +219,34 @@
             e.preventDefault();
         });
         
-        // Enable audio
-        const iframe = document.querySelector('iframe');
-        iframe.src = iframe.src.replace('mute=1', 'mute=0');
+        // Initialize audio when user interacts with the page
+        function initAudio() {
+            const audioIframe = document.querySelector('iframe[title="Background Audio"]');
+            if (audioIframe) {
+                // Force the video to play
+                function playVideo() {
+                    audioIframe.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+                    audioIframe.contentWindow.postMessage('{"event":"command","func":"unMute","args":""}', '*');
+                }
+                
+                // Try to play immediately
+                playVideo();
+                
+                // Try again after a short delay
+                setTimeout(playVideo, 1000);
+                
+                // Also try on any user interaction
+                window.addEventListener('click', playVideo, { once: true });
+                window.addEventListener('keydown', playVideo, { once: true });
+            }
+        }
+        
+        // Initialize audio when the page loads
+        window.addEventListener('load', initAudio);
+        // Also try initializing now in case the page is already loaded
+        if (document.readyState === 'complete') {
+            initAudio();
+        }
     </script>
 </body>
 </html>
